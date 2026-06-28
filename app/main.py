@@ -9,6 +9,7 @@ from uuid import uuid4
 from app.db import AsyncSessionLocal
 from app.models import Order
 from app.publisher import publish_order
+from app.subscribers.inventory import start_inventory_subscriber
 
 # Create app instance
 app = FastAPI()
@@ -19,6 +20,7 @@ async def startup():
   setup_pubsub()
   await create_tables()
   await redis_client.ping()
+  start_inventory_subscriber()
   print("Startup Completed")
 
 @app.get("/")

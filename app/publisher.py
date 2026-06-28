@@ -24,4 +24,4 @@ def publish_status(order_id: str, stage: str, status: str):
     "status": status,
   }).encode("utf-8")
   future = publisher.publish(topic_path, data)
-  furute.result()
+  future.result()
