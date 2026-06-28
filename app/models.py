@@ -15,4 +15,4 @@ class Order(Base):
   inventory_status = Column(String, default="pending")
   notification_status = Column(String, default="pending")
   analytics_status = Column(String, default="pending")
-  created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+  created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
