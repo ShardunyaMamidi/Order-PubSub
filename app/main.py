@@ -10,6 +10,8 @@ from app.db import AsyncSessionLocal
 from app.models import Order
 from app.publisher import publish_order
 from app.subscribers.inventory import start_inventory_subscriber
+from app.subscribers.notification import start_notification_subscriber
+from app.subscribers.analytics import start_analytics_subscriber
 
 # Create app instance
 app = FastAPI()
@@ -21,6 +23,8 @@ async def startup():
   await create_tables()
   await redis_client.ping()
   start_inventory_subscriber()
+  start_notification_subscriber()
+  start_analytics_subscriber()
   print("Startup Completed")
 
 @app.get("/")
