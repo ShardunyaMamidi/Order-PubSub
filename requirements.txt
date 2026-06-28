@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+google-cloud-pubsub
+python-dotenv
+websockets
+sqlalchemy[asyncio]
+asyncpg
+psycopg2-binary
+redis
