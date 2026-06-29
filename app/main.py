@@ -1,6 +1,7 @@
 # entrypoint of the application
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from app.pubsub_setup import setup_pubsub
 from app.db import create_tables
 from app.redis_client import redis_client
@@ -34,10 +35,6 @@ async def startup():
   loop = asyncio.get_event_loop()
   start_status_relay(loop, manager)
   print("Startup Completed")
-
-@app.get("/")
-async def root():
-  return {"status": "ok"}
 
 @app.post("/order", response_model=OrderResponse)
 async def place_order(body: OrderRequest):
@@ -78,3 +75,6 @@ async def websocket_endpoint(websocket: WebSocket):
       await websocket.receive_text()
   except WebSocketDisconnect:
     manager.disconnect(websocket=websocket)
+
+# must be last — catches all remaining routes and serves frontend
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Order System</h1>
+
+  <form id="order-form">
+    <input type="text" id="item" placeholder="Item (e.g. shoes)" required>
+    <input type="number" id="quantity" value="1" min="1" required>
+    <button type="submit">Place Order</button>
+  </form>
+
+  <table id="orders-table">
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Item</th>
+        <th>Inventory</th>
+        <th>Notification</th>
+        <th>Analytics</th>
+      </tr>
+    </thead>
+    <tbody id="orders-body"></tbody>
+  </table>
+
+  <script src="app.js"></script>
+</body>
+</html>

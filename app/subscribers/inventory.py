@@ -13,25 +13,27 @@ def callback(message):
     order = json.loads(message.data.decode("utf-8"))
     order_id = order["order_id"]
 
-    # deduplication guard
-    if not sync_redis_client.set(f"processed:inventory:{order_id}", 1, nx=True, ex=86400):
+    # deduplication guard — check only, don't set yet
+    if sync_redis_client.exists(f"processed:inventory:{order_id}"):
       message.ack()
       return
 
+    # forced failure for DLQ demo
     if order["item"] == "fail":
-      raise Exception("forced failure")
+      raise Exception("forced failure for DLQ demo")
 
     with SyncSessionLocal() as session:
       with session.begin():
         order_row = session.get(Order, order_id)
         order_row.inventory_status = "done"
 
+    # mark as processed only after successful work
+    sync_redis_client.set(f"processed:inventory:{order_id}", 1, ex=86400)
     publish_status(order_id, "inventory", "done")
     message.ack()
 
   except Exception as e:
     print(f"inventory subscriber failed {e}")
-    # After 5 of these nack, this message will be moved to dlq
     message.nack()
 
 # This is where we initialize a subscriber/consumer
