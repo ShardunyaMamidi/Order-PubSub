@@ -8,6 +8,7 @@ from app.config import (
 )
 
 # responsible for creating topics and subscriptions on startup
+# responsible for linking them as well
 def ensure_topic(publisher, topic_id):
   path = publisher.topic_path(PROJECT_ID, topic_id)
   try:
