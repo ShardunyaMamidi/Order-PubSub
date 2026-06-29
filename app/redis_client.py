@@ -1,5 +1,6 @@
 import redis.asyncio as aioredis
 from app.config import REDIS_URL
+import redis
 
 
 # We need to maintain two clients here - async and sync
@@ -7,3 +8,4 @@ from app.config import REDIS_URL
 # sync for the subscriber threads
 
 redis_client = aioredis.from_url(REDIS_URL, decode_responses=True)
+sync_redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)

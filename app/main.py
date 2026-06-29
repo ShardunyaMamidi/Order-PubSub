@@ -13,6 +13,7 @@ from app.subscribers.inventory import start_inventory_subscriber
 from app.subscribers.notification import start_notification_subscriber
 from app.subscribers.analytics import start_analytics_subscriber
 from app.subscribers.status_relay import start_status_relay
+from app.subscribers.dlq_handler import start_dlq_handler
 import asyncio
 from fastapi import WebSocket, WebSocketDisconnect
 from app.ws_manager import manager
@@ -29,6 +30,7 @@ async def startup():
   start_inventory_subscriber()
   start_notification_subscriber()
   start_analytics_subscriber()
+  start_dlq_handler()
   loop = asyncio.get_event_loop()
   start_status_relay(loop, manager)
   print("Startup Completed")

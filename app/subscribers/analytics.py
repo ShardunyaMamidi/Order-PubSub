@@ -4,12 +4,18 @@ from app.config import PROJECT_ID, SUB_ANALYTICS
 from app.db import SyncSessionLocal
 from app.models import Order
 from app.publisher import publish_status
+from app.redis_client import sync_redis_client
 
 
 def callback(message):
   try:
     order = json.loads(message.data.decode("utf-8"))
     order_id = order["order_id"]
+
+    # deduplication guard
+    if not sync_redis_client.set(f"processed:analytics:{order_id}", 1, nx=True, ex=86400):
+      message.ack()
+      return
 
     with SyncSessionLocal() as session:
       with session.begin():

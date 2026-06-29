@@ -4,6 +4,7 @@ from app.config import PROJECT_ID, SUB_INVENTORY
 from app.db import SyncSessionLocal
 from app.models import Order
 from app.publisher import publish_status
+from app.redis_client import sync_redis_client
 
 # This is the function that gets executed when we receive the data from message queue
 
@@ -11,6 +12,14 @@ def callback(message):
   try:
     order = json.loads(message.data.decode("utf-8"))
     order_id = order["order_id"]
+
+    # deduplication guard
+    if not sync_redis_client.set(f"processed:inventory:{order_id}", 1, nx=True, ex=86400):
+      message.ack()
+      return
+
+    if order["item"] == "fail":
+      raise Exception("forced failure")
 
     with SyncSessionLocal() as session:
       with session.begin():
