@@ -12,7 +12,23 @@ body {
 }
 
 h1 {
+  margin-bottom: 1rem;
+}
+
+#stats-bar {
+  display: flex;
+  gap: 2rem;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+#stats-bar strong {
+  color: #111;
 }
 
 form {

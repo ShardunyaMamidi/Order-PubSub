@@ -1,5 +1,31 @@
 const ws = new WebSocket(`ws://${location.host}/ws`);
 
+async function fetchStats() {
+  const res = await fetch("/stats");
+  const { total_orders, dlq_count } = await res.json();
+  document.getElementById("stat-total").textContent = total_orders;
+  document.getElementById("stat-dlq").textContent = dlq_count;
+}
+
+fetchStats();
+// setInterval call fetchStats every 3 seconds
+setInterval(fetchStats, 3000);
+
+async function loadOrders() {
+  const res = await fetch("/orders");
+  const orders = await res.json();
+
+  orders.forEach(order => {
+    addRow(order.order_id, order.item);
+    ["inventory", "notification", "analytics"].forEach(stage => {
+      const status = order[`${stage}_status`];
+      if (status != "pending") updateRow(order.order_id, stage, status)
+    });
+  });
+}
+
+loadOrders();
+
 ws.onmessage = (event) => {
   const { order_id, stage, status } = JSON.parse(event.data);
   updateRow(order_id, stage, status);

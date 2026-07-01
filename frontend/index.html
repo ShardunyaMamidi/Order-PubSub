@@ -9,6 +9,11 @@
 <body>
   <h1>Order System</h1>
 
+  <div id="stats-bar">
+    <span>Total Orders: <strong id="stat-total">0</strong></span>
+    <span>DLQ Failures: <strong id="stat-dlq">0</strong></span>
+  </div>
+
   <form id="order-form">
     <input type="text" id="item" placeholder="Item (e.g. shoes)" required>
     <input type="number" id="quantity" value="1" min="1" required>

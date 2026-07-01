@@ -18,6 +18,7 @@ from app.subscribers.dlq_handler import start_dlq_handler
 import asyncio
 from fastapi import WebSocket, WebSocketDisconnect
 from app.ws_manager import manager
+from sqlalchemy import select
 
 # Create app instance
 app = FastAPI()
@@ -67,6 +68,7 @@ async def place_order(body: OrderRequest):
     status="pending"
   )
 
+# used by the client to form a websocket connection
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
   await manager.connect(websocket=websocket)
@@ -75,6 +77,35 @@ async def websocket_endpoint(websocket: WebSocket):
       await websocket.receive_text()
   except WebSocketDisconnect:
     manager.disconnect(websocket=websocket)
+
+@app.get("/stats")
+async def get_stats():
+  stats_total = await redis_client.get("stats:orders_total")
+  dlq_count = await redis_client.get("stats:dlq_count")
+
+  return {
+    "total_orders": int(stats_total or 0),
+    "dlq_count": int(dlq_count or 0)
+  }
+
+@app.get("/orders")
+async def get_orders():
+  async with AsyncSessionLocal() as session:
+    result = await session.execute(
+      select(Order).order_by(Order.created_at.desc())
+    )
+    orders = result.scalars().all()
+    return [
+      {
+        "order_id": o.order_id,
+        "item": o.item,
+        "inventory_status": o.inventory_status,
+        "notification_status": o.notification_status,
+        "analytics_status": o.analytics_status,
+        "created_at": o.created_at.isoformat()
+      }
+      for o in orders
+    ]
 
 # must be last — catches all remaining routes and serves frontend
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
