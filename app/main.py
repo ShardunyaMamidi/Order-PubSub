@@ -9,9 +9,11 @@ from app.schemas import OrderRequest, OrderResponse
 from uuid import uuid4
 from app.db import AsyncSessionLocal
 from app.models import Order
-from app.publisher import publish_order
+from app.publisher import publish_order, publish_status
 from app.subscribers.inventory import start_inventory_subscriber
-from app.subscribers.notification import start_notification_subscriber
+from fastapi import Request
+import base64
+import json
 from app.subscribers.analytics import start_analytics_subscriber
 from app.subscribers.status_relay import start_status_relay
 from app.subscribers.dlq_handler import start_dlq_handler
@@ -30,7 +32,6 @@ async def startup():
   await create_tables()
   await redis_client.ping()
   start_inventory_subscriber()
-  start_notification_subscriber()
   start_analytics_subscriber()
   start_dlq_handler()
   loop = asyncio.get_event_loop()
@@ -77,6 +78,21 @@ async def websocket_endpoint(websocket: WebSocket):
       await websocket.receive_text()
   except WebSocketDisconnect:
     manager.disconnect(websocket=websocket)
+
+@app.post("/push/notification")
+async def push_notification(request: Request):
+  body = await request.json()
+  data = base64.b64decode(body["message"]["data"])
+  order = json.loads(data)
+  order_id = order["order_id"]
+
+  async with AsyncSessionLocal() as session:
+    async with session.begin():
+      order_row = await session.get(Order, order_id)
+      order_row.notification_status = "done"
+
+  publish_status(order_id, "notification", "done")
+  return {"status": "ok"}
 
 @app.get("/stats")
 async def get_stats():

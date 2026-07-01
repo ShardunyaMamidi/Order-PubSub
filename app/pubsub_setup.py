@@ -36,6 +36,19 @@ def ensure_subscription(subscriber, topic_id, sub_id, dlq_topic_path=None):
   return sub_path
 
 # Called during startup to setup the topics and subscriptions
+def ensure_push_subscription(subscriber, topic_id, sub_id, push_endpoint):
+  sub_path = subscriber.subscription_path(PROJECT_ID, sub_id)
+  topic_path = subscriber.topic_path(PROJECT_ID, topic_id)
+  try:
+    subscriber.create_subscription(request={
+      "name": sub_path,
+      "topic": topic_path,
+      "push_config": {"push_endpoint": push_endpoint},
+    })
+  except AlreadyExists:
+    pass
+  return sub_path
+
 def setup_pubsub():
   publisher = pubsub_v1.PublisherClient()
   subscriber = pubsub_v1.SubscriberClient()
@@ -45,10 +58,12 @@ def setup_pubsub():
   ensure_topic(publisher, TOPIC_STATUS_UPDATES)
   dlq_path = ensure_topic(publisher, TOPIC_DLQ)
 
-  # subscriptions
+  # pull subscriptions
   ensure_subscription(subscriber, TOPIC_ORDER_PLACED, SUB_INVENTORY, dlq_topic_path=dlq_path)
-  ensure_subscription(subscriber, TOPIC_ORDER_PLACED, SUB_NOTIFICATION, dlq_topic_path=dlq_path)
   ensure_subscription(subscriber, TOPIC_ORDER_PLACED, SUB_ANALYTICS, dlq_topic_path=dlq_path)
+
+  # push subscription — notification handled via HTTP endpoint
+  ensure_push_subscription(subscriber, TOPIC_ORDER_PLACED, "notification-push-sub", "http://localhost:8000/push/notification")
 
   # subscription for status-update
   ensure_subscription(subscriber, TOPIC_STATUS_UPDATES, SUB_STATUS_RELAY)
